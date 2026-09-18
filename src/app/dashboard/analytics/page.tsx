@@ -22,30 +22,39 @@ export default function AnalyticsPage() {
   const fetchData = useCallback(async () => {
     setLoading(true);
 
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
 
-    const { data: membership } = await supabase
-      .from("restaurant_members")
-      .select("restaurant_id")
-      .eq("user_id", user.id)
-      .single();
+      const { data: membership } = await supabase
+        .from("restaurant_members")
+        .select("restaurant_id")
+        .eq("user_id", user.id)
+        .single();
 
-    if (!membership) return;
-    setRestaurantId(membership.restaurant_id);
+      if (!membership) {
+        // No membership found
+        return;
+      }
+      
+      setRestaurantId(membership.restaurant_id);
 
-    const since = subDays(new Date(), rangeDays[range]).toISOString();
+      const since = subDays(new Date(), rangeDays[range]).toISOString();
 
-    const { data } = await supabase
-      .from("events")
-      .select("*")
-      .eq("restaurant_id", membership.restaurant_id)
-      .gte("created_at", since)
-      .order("created_at", { ascending: false });
+      const { data } = await supabase
+        .from("events")
+        .select("*")
+        .eq("restaurant_id", membership.restaurant_id)
+        .gte("created_at", since)
+        .order("created_at", { ascending: false });
 
-    setEvents(data || []);
-    setLoading(false);
-  }, [range]);
+      setEvents(data || []);
+    } catch (err) {
+      console.error("Error fetching analytics:", err);
+    } finally {
+      setLoading(false);
+    }
+  }, [range, supabase]);
 
   useEffect(() => {
     fetchData();
