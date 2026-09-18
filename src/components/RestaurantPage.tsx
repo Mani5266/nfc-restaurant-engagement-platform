@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import Image from "next/image";
 import Hero from "./Hero";
 import ReviewCTA from "./ReviewCTA";
@@ -22,6 +23,18 @@ interface RestaurantPageProps {
 
 export default function RestaurantPage({ restaurant, restaurantId, source, offer }: RestaurantPageProps) {
   const activeOffer = offer || restaurant.offer;
+
+  useEffect(() => {
+    // Only track if it's a valid UUID (not the static string fallback)
+    if (restaurantId.includes("-")) {
+      fetch("/api/track", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ restaurantId, eventType: "page_view", source }),
+        keepalive: true,
+      }).catch(() => {});
+    }
+  }, [restaurantId, source]);
 
   return (
     <div className="min-h-dvh bg-ivory flex flex-col">

@@ -37,25 +37,34 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   };
 }
 
+import { createClient } from "@/lib/supabase/server";
+
 export default async function RestaurantLandingPage({ params, searchParams }: PageProps) {
   const { slug } = await params;
   const sp = await searchParams;
-  const restaurant = getRestaurant(slug);
+  const restaurantData = getRestaurant(slug);
 
-  if (!restaurant) {
+  if (!restaurantData) {
     notFound();
   }
 
   // Detect source from query param (?src=nfc or ?src=qr)
   const source = typeof sp.src === "string" ? sp.src : "direct";
 
-  // Use slug as restaurant ID for static fallback
-  // When Supabase is connected, this will be the actual UUID
-  const restaurantId = slug;
+  // Fetch real UUID from Supabase
+  const supabase = await createClient();
+  const { data: dbRestaurant } = await supabase
+    .from("restaurants")
+    .select("id")
+    .eq("slug", slug)
+    .single();
+
+  // Fallback to slug if DB fetch fails (e.g. during local build before DB setup)
+  const restaurantId = dbRestaurant?.id || slug;
 
   return (
     <RestaurantPage
-      restaurant={restaurant}
+      restaurant={restaurantData}
       restaurantId={restaurantId}
       source={source}
     />
