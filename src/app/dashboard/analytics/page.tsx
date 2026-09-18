@@ -15,7 +15,7 @@ export default function AnalyticsPage() {
   const [loading, setLoading] = useState(true);
   const [restaurantId, setRestaurantId] = useState<string | null>(null);
 
-  const supabase = createClient();
+  const [supabase] = useState(() => createClient());
 
   const rangeDays = { "7d": 7, "30d": 30, "90d": 90 };
 
@@ -50,6 +50,30 @@ export default function AnalyticsPage() {
   useEffect(() => {
     fetchData();
   }, [fetchData]);
+
+  useEffect(() => {
+    if (!restaurantId) return;
+
+    const channel = supabase
+      .channel("analytics_events")
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "events",
+          filter: `restaurant_id=eq.${restaurantId}`,
+        },
+        (payload) => {
+          setEvents((current) => [payload.new, ...current]);
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [restaurantId, supabase]);
 
   // Prepare chart data
   const days = rangeDays[range];
