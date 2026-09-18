@@ -5,6 +5,7 @@ import RestaurantPage from "@/components/RestaurantPage";
 
 interface PageProps {
   params: Promise<{ slug: string }>;
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }
 
 export async function generateStaticParams() {
@@ -36,13 +37,27 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   };
 }
 
-export default async function RestaurantLandingPage({ params }: PageProps) {
+export default async function RestaurantLandingPage({ params, searchParams }: PageProps) {
   const { slug } = await params;
+  const sp = await searchParams;
   const restaurant = getRestaurant(slug);
 
   if (!restaurant) {
     notFound();
   }
 
-  return <RestaurantPage restaurant={restaurant} />;
+  // Detect source from query param (?src=nfc or ?src=qr)
+  const source = typeof sp.src === "string" ? sp.src : "direct";
+
+  // Use slug as restaurant ID for static fallback
+  // When Supabase is connected, this will be the actual UUID
+  const restaurantId = slug;
+
+  return (
+    <RestaurantPage
+      restaurant={restaurant}
+      restaurantId={restaurantId}
+      source={source}
+    />
+  );
 }

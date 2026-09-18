@@ -1,13 +1,19 @@
+"use client";
+
 import { Gift, ArrowRight } from "lucide-react";
-import type { Restaurant } from "@/data/restaurants";
+import TrackableLink from "./TrackableLink";
 
 interface OffersSectionProps {
-  restaurant: Restaurant;
+  restaurantId: string;
+  source: string;
+  title: string;
+  description: string;
+  badge: string;
+  cta: string;
+  ctaUrl?: string;
 }
 
-export default function OffersSection({ restaurant }: OffersSectionProps) {
-  const { offer } = restaurant;
-
+export default function OffersSection(props: OffersSectionProps) {
   return (
     <section className="px-5 md:px-8 py-4 animate-fade-in-up stagger-6" aria-label="Current offers">
       <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-soft-beige to-warm-white border border-border-light p-6 md:p-8">
@@ -18,31 +24,32 @@ export default function OffersSection({ restaurant }: OffersSectionProps) {
         <div className="flex items-center justify-center gap-2 mb-4">
           <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-muted-gold/10 text-muted-gold text-xs font-semibold tracking-wide uppercase font-body">
             <Gift className="w-3.5 h-3.5" aria-hidden="true" />
-            {offer.badge}
+            {props.badge}
           </span>
         </div>
 
         {/* Content */}
         <div className="text-center">
           <h2 className="font-heading text-2xl md:text-3xl font-bold text-charcoal mb-2">
-            {offer.title}
+            {props.title}
           </h2>
           <p className="text-charcoal-light text-base md:text-lg font-body mb-5">
-            {offer.description}
+            {props.description}
           </p>
 
-          {offer.ctaUrl && (
-            <a
-              href={offer.ctaUrl}
-              target="_blank"
-              rel="noopener noreferrer"
+          {props.ctaUrl && (
+            <TrackableLink
+              href={props.ctaUrl}
+              restaurantId={props.restaurantId}
+              eventType="offer"
+              source={props.source}
               id="offer-cta"
               className="inline-flex items-center justify-center gap-2 bg-charcoal hover:bg-charcoal-light text-white font-semibold py-3 px-6 rounded-full transition-all duration-300 hover:scale-[1.03] hover:shadow-lg text-sm font-body"
-              aria-label={offer.cta}
+              ariaLabel={props.cta}
             >
-              {offer.cta}
+              {props.cta}
               <ArrowRight className="w-4 h-4" aria-hidden="true" />
-            </a>
+            </TrackableLink>
           )}
         </div>
 

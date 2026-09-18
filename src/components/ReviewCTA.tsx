@@ -1,11 +1,15 @@
+"use client";
+
 import { Star, ArrowRight } from "lucide-react";
-import type { Restaurant } from "@/data/restaurants";
+import TrackableLink from "./TrackableLink";
 
 interface ReviewCTAProps {
-  restaurant: Restaurant;
+  restaurantId: string;
+  googleReviewUrl: string;
+  source: string;
 }
 
-export default function ReviewCTA({ restaurant }: ReviewCTAProps) {
+export default function ReviewCTA({ restaurantId, googleReviewUrl, source }: ReviewCTAProps) {
   return (
     <section
       className="px-5 md:px-8 pt-10 pb-2 animate-fade-in-up stagger-4"
@@ -34,18 +38,19 @@ export default function ReviewCTA({ restaurant }: ReviewCTAProps) {
             Share your experience on Google
           </p>
 
-          <a
-            href={restaurant.googleReviewUrl}
-            target="_blank"
-            rel="noopener noreferrer"
+          <TrackableLink
+            href={googleReviewUrl}
+            restaurantId={restaurantId}
+            eventType="google_review"
+            source={source}
             id="google-review-cta"
             className="inline-flex items-center justify-center gap-2 bg-muted-gold hover:bg-muted-gold-light text-white font-semibold py-3.5 px-7 rounded-full transition-all duration-300 hover:scale-[1.03] hover:shadow-lg animate-pulse-gold text-sm md:text-base"
-            aria-label="Review us on Google"
+            ariaLabel="Review us on Google"
           >
             <Star className="w-4 h-4" aria-hidden="true" />
             Review us on Google
             <ArrowRight className="w-4 h-4" aria-hidden="true" />
-          </a>
+          </TrackableLink>
         </div>
       </div>
     </section>
