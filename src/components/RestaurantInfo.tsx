@@ -23,7 +23,7 @@ export default function RestaurantInfo(props: RestaurantInfoProps) {
 
   return (
     <section
-      className="px-5 md:px-8 py-8 animate-fade-in-up stagger-7"
+      className="px-5 md:px-8 py-8"
       aria-label="Restaurant information"
     >
       <div className="border-t border-border-light pt-8">

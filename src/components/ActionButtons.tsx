@@ -9,6 +9,7 @@ import {
   ArrowRight,
 } from "lucide-react";
 import TrackableLink from "./TrackableLink";
+import Reveal from "./Reveal";
 
 interface ActionItem {
   id: string;
@@ -98,17 +99,17 @@ export default function ActionButtons(props: ActionButtonsProps) {
   return (
     <section className="px-5 md:px-8 py-6" aria-label="Quick actions">
       <div className="flex flex-col gap-3">
-        {actions.map((action) => (
-          <TrackableLink
-            key={action.id}
-            id={action.id}
-            href={action.href}
-            restaurantId={props.restaurantId}
-            eventType={action.eventType}
-            source={props.source}
-            className={`flex items-center gap-4 p-4 rounded-xl transition-all duration-300 hover:scale-[1.02] hover:shadow-md animate-fade-in-up ${action.stagger} ${action.bgClass}`}
-            ariaLabel={action.label}
-          >
+        {actions.map((action, i) => (
+          <Reveal key={action.id} delay={Math.min(i * 80, 320)}>
+            <TrackableLink
+              id={action.id}
+              href={action.href}
+              restaurantId={props.restaurantId}
+              eventType={action.eventType}
+              source={props.source}
+              className={`flex items-center gap-4 p-4 rounded-xl transition-all duration-300 hover:scale-[1.02] hover:shadow-md active:scale-[0.99] ${action.bgClass}`}
+              ariaLabel={action.label}
+            >
             {/* Icon */}
             <div
               className={`flex-shrink-0 w-11 h-11 rounded-xl flex items-center justify-center shadow-sm ${action.iconBgClass}`}
@@ -131,7 +132,8 @@ export default function ActionButtons(props: ActionButtonsProps) {
               className="w-4 h-4 text-warm-gray flex-shrink-0"
               aria-hidden="true"
             />
-          </TrackableLink>
+            </TrackableLink>
+          </Reveal>
         ))}
       </div>
     </section>

@@ -46,7 +46,7 @@ export default async function RestaurantEditPage() {
         </p>
       </div>
 
-      <div className="bg-warm-white rounded-2xl border border-border-light p-6 md:p-8">
+      <div className="bg-warm-white rounded-2xl border border-border-light p-6 md:p-8 max-h-[calc(100dvh-220px)] overflow-y-auto">
         <RestaurantForm restaurant={restaurant} />
       </div>
     </div>

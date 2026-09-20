@@ -14,6 +14,7 @@ import StatCard from "@/components/dashboard/StatCard";
 import ClicksChart from "@/components/dashboard/ClicksChart";
 import DistributionChart from "@/components/dashboard/DistributionChart";
 import EventsTable from "@/components/dashboard/EventsTable";
+import Insights from "@/components/dashboard/Insights";
 import { format, subDays } from "date-fns";
 
 interface DashboardClientProps {
@@ -143,6 +144,9 @@ export default function DashboardClient({
           color="bg-green-500"
         />
       </div>
+
+      {/* Smart Suggestions */}
+      <Insights events={events} prevCount={prevCount} periodLabel="the last 7 days" />
 
       {/* Charts Row */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

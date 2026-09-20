@@ -5,12 +5,15 @@ import { createClient } from "@/lib/supabase/client";
 import ClicksChart from "@/components/dashboard/ClicksChart";
 import DistributionChart from "@/components/dashboard/DistributionChart";
 import EventsTable from "@/components/dashboard/EventsTable";
-import { format, subDays } from "date-fns";
+import Insights from "@/components/dashboard/Insights";
+import { format, subDays, addDays } from "date-fns";
 
 type DateRange = "7d" | "30d" | "90d";
 
 export default function AnalyticsPage() {
+  const [mode, setMode] = useState<"range" | "day">("range");
   const [range, setRange] = useState<DateRange>("7d");
+  const [day, setDay] = useState(() => format(new Date(), "yyyy-MM-dd"));
   const [events, setEvents] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [restaurantId, setRestaurantId] = useState<string | null>(null);
@@ -39,14 +42,20 @@ export default function AnalyticsPage() {
       
       setRestaurantId(membership.restaurant_id);
 
-      const since = subDays(new Date(), rangeDays[range]).toISOString();
-
-      const { data } = await supabase
+      // ponytail: native date input + day-bounded query, no calendar lib.
+      let query = supabase
         .from("events")
         .select("*")
-        .eq("restaurant_id", membership.restaurant_id)
-        .gte("created_at", since)
-        .order("created_at", { ascending: false });
+        .eq("restaurant_id", membership.restaurant_id);
+
+      if (mode === "day") {
+        const start = new Date(`${day}T00:00:00`);
+        query = query.gte("created_at", start.toISOString()).lt("created_at", addDays(start, 1).toISOString());
+      } else {
+        query = query.gte("created_at", subDays(new Date(), rangeDays[range]).toISOString());
+      }
+
+      const { data } = await query.order("created_at", { ascending: false });
 
       setEvents(data || []);
     } catch (err) {
@@ -54,7 +63,7 @@ export default function AnalyticsPage() {
     } finally {
       setLoading(false);
     }
-  }, [range, supabase]);
+  }, [range, mode, day, supabase]);
 
   useEffect(() => {
     fetchData();
@@ -74,6 +83,12 @@ export default function AnalyticsPage() {
           filter: `restaurant_id=eq.${restaurantId}`,
         },
         (payload) => {
+          const created = (payload.new as { created_at: string }).created_at;
+          if (mode === "day") {
+            if (format(new Date(created), "yyyy-MM-dd") !== day) return;
+          } else if (new Date(created) < subDays(new Date(), rangeDays[range])) {
+            return;
+          }
           setEvents((current) => [payload.new, ...current]);
         }
       )
@@ -86,16 +101,25 @@ export default function AnalyticsPage() {
 
   // Prepare chart data
   const days = rangeDays[range];
-  const chartData = [];
-  for (let i = days - 1; i >= 0; i--) {
-    const day = subDays(new Date(), i);
-    const dateStr = format(day, "yyyy-MM-dd");
-    const label = days <= 7 ? format(day, "EEE") : format(day, "MMM d");
-    const count = events.filter(
-      (e) => format(new Date(e.created_at), "yyyy-MM-dd") === dateStr
-    ).length;
-    chartData.push({ date: label, clicks: count });
-  }
+  const chartData =
+    mode === "day"
+      ? Array.from({ length: 24 }, (_, h) => ({
+          date: format(new Date(2000, 0, 1, h), "ha").toLowerCase(),
+          clicks: events.filter((e) => new Date(e.created_at).getHours() === h).length,
+        })).filter((_, h) => h % 2 === 0)
+      : (() => {
+          const arr = [];
+          for (let i = days - 1; i >= 0; i--) {
+            const d = subDays(new Date(), i);
+            const dateStr = format(d, "yyyy-MM-dd");
+            const label = days <= 7 ? format(d, "EEE") : format(d, "MMM d");
+            const count = events.filter(
+              (e) => format(new Date(e.created_at), "yyyy-MM-dd") === dateStr
+            ).length;
+            arr.push({ date: label, clicks: count });
+          }
+          return arr;
+        })();
 
   // Distribution
   const countByType = (type: string) => events.filter((e) => e.event_type === type).length;
@@ -126,25 +150,52 @@ export default function AnalyticsPage() {
             Analytics
           </h1>
           <p className="text-warm-gray text-sm font-body mt-1">
-            {events.length} total events in the last {rangeDays[range]} days
+            {mode === "day"
+              ? `${events.length} total events on ${format(new Date(`${day}T00:00:00`), "MMM d, yyyy")}`
+              : `${events.length} total events in the last ${rangeDays[range]} days`}
           </p>
         </div>
 
         {/* Range selector */}
-        <div className="flex gap-1 bg-soft-beige rounded-xl p-1">
-          {(["7d", "30d", "90d"] as DateRange[]).map((r) => (
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="flex gap-1 bg-soft-beige rounded-xl p-1">
             <button
-              key={r}
-              onClick={() => setRange(r)}
+              onClick={() => setMode("day")}
               className={`px-4 py-2 rounded-lg text-xs font-semibold font-body transition-all ${
-                range === r
+                mode === "day"
                   ? "bg-deep-green text-white shadow-sm"
                   : "text-charcoal-light hover:text-charcoal"
               }`}
             >
-              {r === "7d" ? "7 Days" : r === "30d" ? "30 Days" : "90 Days"}
+              Day
             </button>
-          ))}
+            {(["7d", "30d", "90d"] as DateRange[]).map((r) => (
+              <button
+                key={r}
+                onClick={() => {
+                  setMode("range");
+                  setRange(r);
+                }}
+                className={`px-4 py-2 rounded-lg text-xs font-semibold font-body transition-all ${
+                  mode === "range" && range === r
+                    ? "bg-deep-green text-white shadow-sm"
+                    : "text-charcoal-light hover:text-charcoal"
+                }`}
+              >
+                {r === "7d" ? "7 Days" : r === "30d" ? "30 Days" : "90 Days"}
+              </button>
+            ))}
+          </div>
+          {mode === "day" && (
+            <input
+              type="date"
+              value={day}
+              max={format(new Date(), "yyyy-MM-dd")}
+              onChange={(e) => e.target.value && setDay(e.target.value)}
+              aria-label="Select report date"
+              className="px-3 py-2 rounded-xl border border-border-light bg-warm-white text-charcoal text-xs font-body focus:outline-none focus:ring-2 focus:ring-deep-green/30"
+            />
+          )}
         </div>
       </div>
 
@@ -174,11 +225,17 @@ export default function AnalyticsPage() {
             </div>
           </div>
 
+          {/* Smart Suggestions */}
+          <Insights
+            events={events}
+            periodLabel={mode === "day" ? format(new Date(`${day}T00:00:00`), "MMM d, yyyy") : `the last ${rangeDays[range]} days`}
+          />
+
           {/* Charts */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div className="lg:col-span-2 bg-warm-white rounded-2xl border border-border-light p-5">
               <h2 className="font-heading text-lg font-semibold text-charcoal mb-4">
-                Clicks Over Time
+                {mode === "day" ? "Clicks by Hour" : "Clicks Over Time"}
               </h2>
               <ClicksChart data={chartData} />
             </div>

@@ -43,9 +43,9 @@ export default function EventsTable({ events }: EventsTableProps) {
   }
 
   return (
-    <div className="overflow-x-auto">
+    <div className="overflow-x-auto overflow-y-auto max-h-[420px]">
       <table className="w-full text-sm font-body">
-        <thead>
+        <thead className="sticky top-0 bg-warm-white z-10">
           <tr className="border-b border-border-light">
             <th className="text-left py-3 px-3 text-xs font-semibold text-warm-gray uppercase tracking-wide">
               Event

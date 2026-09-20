@@ -140,13 +140,15 @@ export default function RestaurantForm({ restaurant }: RestaurantFormProps) {
         </p>
       )}
 
-      <button
-        type="submit"
-        disabled={saving}
-        className="px-8 py-3 rounded-xl bg-deep-green hover:bg-deep-green-light text-white font-semibold text-sm font-body transition-all duration-200 disabled:opacity-50"
-      >
-        {saving ? "Saving..." : "Save Changes"}
-      </button>
+      <div className="sticky bottom-0 pt-2 pb-1 bg-gradient-to-t from-warm-white via-warm-white to-transparent">
+        <button
+          type="submit"
+          disabled={saving}
+          className="px-8 py-3 rounded-xl bg-deep-green hover:bg-deep-green-light text-white font-semibold text-sm font-body transition-all duration-200 disabled:opacity-50"
+        >
+          {saving ? "Saving..." : "Save Changes"}
+        </button>
+      </div>
     </form>
   );
 }

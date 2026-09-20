@@ -3,9 +3,10 @@
 import { useEffect } from "react";
 import Image from "next/image";
 import Hero from "./Hero";
+import Reveal from "./Reveal";
 import ReviewCTA from "./ReviewCTA";
 import ActionButtons from "./ActionButtons";
-import OffersSection from "./OffersSection";
+import OffersSection, { type OfferItem } from "./OffersSection";
 import RestaurantInfo from "./RestaurantInfo";
 import Footer from "./Footer";
 import type { Restaurant } from "@/data/restaurants";
@@ -14,17 +15,13 @@ interface RestaurantPageProps {
   restaurant: Restaurant;
   restaurantId: string;
   source: string;
-  offer?: {
-    title: string;
-    description: string;
-    badge: string;
-    cta: string;
-    ctaUrl?: string;
-  };
+  offers?: OfferItem[];
+  offer?: OfferItem;
 }
 
-export default function RestaurantPage({ restaurant, restaurantId, source, offer }: RestaurantPageProps) {
-  const activeOffer = offer || restaurant.offer;
+export default function RestaurantPage({ restaurant, restaurantId, source, offers, offer }: RestaurantPageProps) {
+  const allOffers: OfferItem[] =
+    offers && offers.length > 0 ? offers : offer ? [offer] : restaurant.offer ? [restaurant.offer] : [];
 
   useEffect(() => {
     // Only track if it's a valid UUID (not the static string fallback)
@@ -42,11 +39,15 @@ export default function RestaurantPage({ restaurant, restaurantId, source, offer
     <div className="min-h-dvh bg-ivory flex flex-col">
       <main className="flex-1 w-full max-w-lg mx-auto bg-warm-white shadow-sm">
         <Hero restaurant={restaurant} />
-        <ReviewCTA
-          restaurantId={restaurantId}
-          googleReviewUrl={restaurant.googleReviewUrl}
-          source={source}
-        />
+        <Reveal>
+          <ReviewCTA
+            restaurantId={restaurantId}
+            googleReviewUrl={restaurant.googleReviewUrl}
+            source={source}
+            restaurantName={restaurant.name}
+            slug={restaurant.slug}
+          />
+        </Reveal>
         <ActionButtons
           restaurantId={restaurantId}
           source={source}
@@ -60,29 +61,29 @@ export default function RestaurantPage({ restaurant, restaurantId, source, offer
           address={restaurant.address}
           city={restaurant.city}
         />
-        {activeOffer && (
-          <OffersSection
+        {allOffers.length > 0 && (
+          <Reveal>
+            <OffersSection
+              restaurantId={restaurantId}
+              source={source}
+              offers={allOffers}
+            />
+          </Reveal>
+        )}
+        <Reveal>
+          <RestaurantInfo
             restaurantId={restaurantId}
             source={source}
-            title={activeOffer.title}
-            description={activeOffer.description}
-            badge={activeOffer.badge}
-            cta={activeOffer.cta}
-            ctaUrl={activeOffer.ctaUrl}
+            name={restaurant.name}
+            address={restaurant.address}
+            city={restaurant.city}
+            hours={restaurant.hours}
+            phone={restaurant.phone}
+            mapsUrl={restaurant.mapsUrl}
+            whatsappNumber={restaurant.whatsappNumber}
+            whatsappMessage={restaurant.whatsappMessage}
           />
-        )}
-        <RestaurantInfo
-          restaurantId={restaurantId}
-          source={source}
-          name={restaurant.name}
-          address={restaurant.address}
-          city={restaurant.city}
-          hours={restaurant.hours}
-          phone={restaurant.phone}
-          mapsUrl={restaurant.mapsUrl}
-          whatsappNumber={restaurant.whatsappNumber}
-          whatsappMessage={restaurant.whatsappMessage}
-        />
+        </Reveal>
         <Footer />
       </main>
     </div>

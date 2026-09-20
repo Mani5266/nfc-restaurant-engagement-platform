@@ -62,11 +62,32 @@ export default async function RestaurantLandingPage({ params, searchParams }: Pa
   // Fallback to slug if DB fetch fails (e.g. during local build before DB setup)
   const restaurantId = dbRestaurant?.id || slug;
 
+  // Live offers from dashboard (falls back to static offer inside RestaurantPage)
+  let liveOffers = undefined;
+  if (dbRestaurant?.id) {
+    const { data: dbOffers } = await supabase
+      .from("offers")
+      .select("title, description, badge, cta, cta_url")
+      .eq("restaurant_id", dbRestaurant.id)
+      .eq("is_active", true)
+      .order("created_at", { ascending: false });
+    if (dbOffers && dbOffers.length > 0) {
+      liveOffers = dbOffers.map((o) => ({
+        title: o.title,
+        description: o.description,
+        badge: o.badge,
+        cta: o.cta,
+        ctaUrl: o.cta_url || undefined,
+      }));
+    }
+  }
+
   return (
     <RestaurantPage
       restaurant={restaurantData}
       restaurantId={restaurantId}
       source={source}
+      offers={liveOffers}
     />
   );
 }
