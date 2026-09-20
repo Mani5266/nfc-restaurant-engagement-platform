@@ -45,8 +45,8 @@ const fields: { key: keyof RestaurantData; label: string; type?: string; placeho
   { key: "website_url", label: "Website URL", type: "url", placeholder: "https://yourrestaurant.com", group: "Links" },
   { key: "menu_url", label: "Menu URL", type: "url", placeholder: "https://yourrestaurant.com/menu", group: "Links" },
   { key: "maps_url", label: "Google Maps URL", type: "url", placeholder: "https://maps.google.com/?q=...", group: "Links" },
-  { key: "logo_url", label: "Logo Image URL", type: "url", placeholder: "/images/logo.png", group: "Images" },
-  { key: "hero_image_url", label: "Hero Image URL", type: "url", placeholder: "/images/hero.jpg", group: "Images" },
+  { key: "logo_url", label: "Logo Image URL (one-time setup)", placeholder: "/images/mico-logo.jpg", group: "Images" },
+  { key: "hero_image_url", label: "Hero Image URL (one-time setup)", placeholder: "/images/mico-hero.jpg", group: "Images" },
 ];
 
 export default function RestaurantForm({ restaurant }: RestaurantFormProps) {
@@ -67,7 +67,8 @@ export default function RestaurantForm({ restaurant }: RestaurantFormProps) {
     setSaved(false);
 
     const supabase = createClient();
-    const { id, slug, ...updateData } = formData;
+    // ponytail: images managed by us — never let the owner form overwrite them
+    const { id, slug, logo_url, hero_image_url, ...updateData } = formData;
 
     const { error: updateError } = await supabase
       .from("restaurants")
@@ -83,8 +84,8 @@ export default function RestaurantForm({ restaurant }: RestaurantFormProps) {
     setSaving(false);
   };
 
-  // Group fields
-  const groups = ["Basic Info", "Contact", "Links", "Images"];
+  // Group fields (Images locked — managed by us, not owners)
+  const groups = ["Basic Info", "Contact", "Links", "Images"]; // ponytail: temp re-add for one-time image set, remove after save
 
   return (
     <form onSubmit={handleSave} className="space-y-8">
